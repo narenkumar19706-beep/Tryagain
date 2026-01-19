@@ -1,32 +1,32 @@
-const express = require('express');
+import dotenv from 'dotenv';
+import express from 'express';
+import morgan from 'morgan';
 
-const { env } = require('./config/env');
-const { logger } = require('./utils/logger');
-const healthRoutes = require('./routes/health.routes');
-const volunteerRoutes = require('./routes/volunteer.routes');
-const sosRoutes = require('./routes/sos.routes');
+import routes from './routes.js';
+
+dotenv.config();
 
 const app = express();
+const port = Number(process.env.PORT) || 8080;
 
 app.use(express.json());
+app.use(morgan('dev'));
 
 app.get('/', (_req, res) => {
   res.json({ ok: true, message: 'RRT backend running.' });
 });
 
-app.use('/api/health', healthRoutes);
-app.use('/api/volunteers', volunteerRoutes);
-app.use('/api/sos', sosRoutes);
+app.use('/api', routes);
 
 app.use((req, res) => {
   res.status(404).json({ ok: false, message: 'Not Found' });
 });
 
 app.use((err, _req, res, _next) => {
-  logger.error('Unhandled error', { error: err.message });
+  console.error('Unhandled error', err);
   res.status(500).json({ ok: false, message: 'Server error' });
 });
 
-app.listen(env.port, () => {
-  logger.info(`RRT backend listening on port ${env.port}`);
+app.listen(port, () => {
+  console.log(`RRT backend listening on port ${port}`);
 });
