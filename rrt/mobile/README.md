@@ -1,3 +1,9 @@
 # RRT Mobile (Flutter)
 
-Flutter application source will live here.
+Flutter application source lives in this directory.
+
+## Structure
+- `lib/` - Flutter app code
+- `android/` - Android platform shell
+- `ios/` - iOS platform shell
+- `pubspec.yaml` - Flutter package manifest
