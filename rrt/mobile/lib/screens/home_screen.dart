@@ -297,18 +297,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: _buildBody(w),
               ),
               const SizedBox(height: 12),
-              Center(
-                child: Text(
-                  "SECURE  ACCESS   •   PRIVACY  ENSURED",
-                  style: TextStyle(
-                    fontSize: 12,
-                    letterSpacing: 2.2,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black.withOpacity(0.22),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
             ],
           ),
         ),

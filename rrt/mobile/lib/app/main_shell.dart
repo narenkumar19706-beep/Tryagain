@@ -53,6 +53,17 @@ class _MainShellState extends State<MainShell> {
               ],
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            "SECURE  ACCESS   •   PRIVACY  ENSURED",
+            style: TextStyle(
+              fontSize: 12,
+              letterSpacing: 2.2,
+              fontWeight: FontWeight.w700,
+              color: Colors.black.withOpacity(0.22),
+            ),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
     );
