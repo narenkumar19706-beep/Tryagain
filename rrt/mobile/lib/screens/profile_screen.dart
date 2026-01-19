@@ -15,6 +15,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
 
   bool _saving = false;
   String? _error;
@@ -29,6 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final name = _nameCtrl.text.trim();
     final phoneRaw = _digitsOnly(_phoneCtrl.text.trim());
+    final address = _addressCtrl.text.trim();
 
     if (name.isEmpty) {
       setState(() {
@@ -42,6 +44,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _saving = false;
         _error = 'Enter valid 10 digit mobile number';
+      });
+      return;
+    }
+
+    if (address.isEmpty) {
+      setState(() {
+        _saving = false;
+        _error = 'Enter your address';
       });
       return;
     }
@@ -60,6 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         phone: phoneRaw,
         district: district,
         areaName: areaName,
+        address: address,
       );
 
       await ApiService.register(
@@ -67,6 +78,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         phoneNumber: phoneRaw,
         district: district,
         fcmToken: token,
+        address: address,
       );
 
       widget.onContinue();
@@ -85,6 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void dispose() {
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
+    _addressCtrl.dispose();
     super.dispose();
   }
 
@@ -192,6 +205,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 28),
+              const Text(
+                'ADDRESS',
+                style: TextStyle(
+                  fontSize: 14,
+                  letterSpacing: 3,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFFB6BCC6),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _addressCtrl,
+                decoration: const InputDecoration(
+                  hintText: '12th Main, Indiranagar',
+                  hintStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 1.2),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 2),
+                  ),
+                ),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 18),
               const Text(
