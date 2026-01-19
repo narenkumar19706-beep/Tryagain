@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-
-import '../screens/home_screen.dart';
-import '../screens/location_access_screen.dart';
-import '../screens/profile_screen.dart';
 import '../services/local_storage.dart';
+import '../screens/location_access_screen.dart';
+import '../screens/profile_onboarding_screen.dart';
+import 'main_shell.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -27,13 +26,11 @@ class _AppShellState extends State<AppShell> {
     _locationGranted = await LocalStorage.isLocationGranted();
     _hasProfile = await LocalStorage.hasProfile();
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
     setState(() => _loading = false);
   }
 
-  Future<void> _refresh() async {
+  void _refresh() async {
     setState(() => _loading = true);
     await _boot();
   }
@@ -52,9 +49,9 @@ class _AppShellState extends State<AppShell> {
     }
 
     if (!_hasProfile) {
-      return ProfileScreen(onContinue: _refresh);
+      return ProfileOnboardingScreen(onContinue: _refresh);
     }
 
-    return const HomeScreen();
+    return const MainShell();
   }
 }

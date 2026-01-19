@@ -1,95 +1,85 @@
 import 'package:flutter/material.dart';
-import '../services/local_storage.dart';
 import '../services/api_service.dart';
 import '../services/fcm_service.dart';
+import '../services/local_storage.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class ProfileOnboardingScreen extends StatefulWidget {
+  final VoidCallback onContinue;
+  const ProfileOnboardingScreen({super.key, required this.onContinue});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfileOnboardingScreen> createState() =>
+      _ProfileOnboardingScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen> {
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
 
-  String _address = "";
-  String _district = "";
-  String _areaName = "";
-
   bool _saving = false;
-  String? _msg;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final name = await LocalStorage.getName();
-    final phone = await LocalStorage.getPhone();
-    _district = await LocalStorage.getDistrict();
-    _areaName = await LocalStorage.getAreaName();
-    _address = await LocalStorage.getAddress();
-
-    _nameCtrl.text = name;
-    _phoneCtrl.text = phone;
-
-    if (!mounted) return;
-    setState(() {});
-  }
+  String? _error;
 
   String _digitsOnly(String s) => s.replaceAll(RegExp(r'[^0-9]'), '');
 
-  Future<void> _updateProfile() async {
+  Future<void> _save() async {
     setState(() {
+      _error = null;
       _saving = true;
-      _msg = null;
     });
 
     final name = _nameCtrl.text.trim();
-    final phone = _digitsOnly(_phoneCtrl.text.trim());
+    final phoneRaw = _digitsOnly(_phoneCtrl.text.trim());
 
-    if (name.isEmpty || phone.length != 10) {
+    if (name.isEmpty) {
       setState(() {
         _saving = false;
-        _msg = "Enter valid name and 10 digit phone";
+        _error = "Enter your name";
       });
       return;
     }
 
+    if (phoneRaw.length != 10) {
+      setState(() {
+        _saving = false;
+        _error = "Enter valid 10 digit mobile number";
+      });
+      return;
+    }
+
+    const district = "East Bangalore";
+    const areaName = "Indiranagar, Bangalore";
+    const address = "12th Main, Indiranagar";
+
     try {
       final token = await FcmService.token();
-      if (token == null) throw Exception("No token");
+      if (token == null) throw Exception("FCM token not available");
 
       await LocalStorage.saveProfile(
         name: name,
-        phone: phone,
-        district: _district,
-        areaName: _areaName,
-        address: _address,
+        phone: phoneRaw,
+        district: district,
+        areaName: areaName,
+        address: address,
       );
 
       await ApiService.register(
         name: name,
-        phoneNumber: phone,
-        district: _district,
+        phoneNumber: phoneRaw,
+        district: district,
         fcmToken: token,
-        address: _address,
+        address: address,
       );
 
+      widget.onContinue();
+    } catch (e) {
       setState(() {
         _saving = false;
-        _msg = "Updated";
+        _error = "Failed to save. Check backend + internet.";
       });
-    } catch (_) {
-      setState(() {
-        _saving = false;
-        _msg = "Update failed";
-      });
+      return;
     }
+
+    setState(() => _saving = false);
   }
 
   @override
@@ -144,15 +134,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: Color(0xFF9AA0A6),
                 ),
               ),
-              const SizedBox(height: 42),
+              const SizedBox(height: 36),
               const Text(
-                "Profile",
+                "Your Profile",
                 style: TextStyle(
-                  fontSize: 40,
+                  fontSize: 44,
                   fontWeight: FontWeight.w900,
+                  letterSpacing: -0.8,
                 ),
               ),
-              const SizedBox(height: 26),
+              const SizedBox(height: 28),
               const Text(
                 "NAME",
                 style: TextStyle(
@@ -166,6 +157,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: _nameCtrl,
                 decoration: const InputDecoration(
+                  hintText: "Enter Name",
+                  hintStyle: TextStyle(fontSize: 26, fontWeight: FontWeight.w600),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.black, width: 1.2),
                   ),
@@ -173,9 +166,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderSide: BorderSide(color: Colors.black, width: 2),
                   ),
                 ),
-                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 26),
+              const SizedBox(height: 30),
               const Text(
                 "MOBILE NUMBER",
                 style: TextStyle(
@@ -190,6 +183,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 controller: _phoneCtrl,
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
+                  hintText: "+91 00000 00000",
+                  hintStyle: TextStyle(fontSize: 26, fontWeight: FontWeight.w600),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.black, width: 1.2),
                   ),
@@ -197,58 +192,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderSide: BorderSide(color: Colors.black, width: 2),
                   ),
                 ),
-                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 26),
-              const Text(
-                "ADDRESS (AUTO-POPULATED)",
-                style: TextStyle(
-                  fontSize: 14,
-                  letterSpacing: 3,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFFB6BCC6),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                _address,
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF9AA0A6),
-                ),
-              ),
-              const Divider(height: 18, thickness: 1.2, color: Colors.black),
               const SizedBox(height: 18),
               const Text(
-                "DISTRICT (AUTO-POPULATED)",
+                "MANDATORY FOR ALERTS.\nYOUR PHONE NUMBER IS EXPOSED ONLY WHILE AN SOS\nALERT IS ACTIVE. PRIVACY BY DESIGN.",
                 style: TextStyle(
-                  fontSize: 14,
-                  letterSpacing: 3,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                  letterSpacing: 2.0,
+                  height: 1.5,
+                  fontWeight: FontWeight.w700,
                   color: Color(0xFFB6BCC6),
                 ),
               ),
-              const SizedBox(height: 10),
-              Text(
-                _district,
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF9AA0A6),
-                ),
-              ),
-              const Divider(height: 18, thickness: 1.2, color: Colors.black),
               const Spacer(),
-              if (_msg != null)
+              if (_error != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Text(
-                    _msg!,
+                    _error!,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: Colors.black,
+                      color: Color(0xFFE11B22),
                     ),
                   ),
                 ),
@@ -260,13 +226,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   border: Border.all(color: Colors.black, width: 1),
                 ),
                 child: InkWell(
-                  onTap: _saving ? null : _updateProfile,
+                  onTap: _saving ? null : _save,
                   child: Row(
                     children: [
                       Expanded(
                         child: Center(
                           child: Text(
-                            _saving ? "UPDATING..." : "UPDATE PROFILE",
+                            _saving ? "SAVING..." : "SAVE & PROCEED",
                             style: const TextStyle(
                               fontSize: 16,
                               letterSpacing: 4,
@@ -292,7 +258,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 18),
+              Text(
+                "SECURE  ACCESS   •   PRIVACY  ENSURED",
+                style: TextStyle(
+                  fontSize: 12,
+                  letterSpacing: 2.2,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black.withOpacity(0.22),
+                ),
+              ),
+              const SizedBox(height: 12),
             ],
           ),
         ),
