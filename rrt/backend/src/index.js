@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import morgan from 'morgan';
 
-import routes from './routes.js';
+import { router } from './routes.js';
 
 dotenv.config();
 
@@ -16,7 +16,7 @@ app.get('/', (_req, res) => {
   res.json({ ok: true, message: 'RRT backend running.' });
 });
 
-app.use('/api', routes);
+app.use('/api', router);
 
 app.use((req, res) => {
   res.status(404).json({ ok: false, message: 'Not Found' });
